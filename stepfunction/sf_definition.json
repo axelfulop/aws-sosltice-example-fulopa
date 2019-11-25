@@ -1,0 +1,21 @@
+{
+    "StartAt": "InsertDynamoData",
+    "States": {
+        "InsertDynamoData": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${DynamoPutName}",
+            "ResultPath": "$",
+            "Next": "GetDynamoData"
+        },
+        "GetDynamoData": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${DynamoGetName}",
+            "ResultPath": "$",
+            "Next": "Terminar"
+        },
+        "Terminar": {
+            "Type": "Pass",
+            "End": true
+        }
+    }
+}

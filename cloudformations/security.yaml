@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Example of Security
+
+Parameters:
+  Environment:
+    Type: String
+  Project:
+    Type: String
+
+Resources:
+  Role:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole"
+      Policies:
+        - PolicyName: "AccesTables"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "dynamodb:*"
+                  - "lambda:*"
+                Resource: "*"
+      RoleName: !Join ["-", [!Ref Environment, "aws-training"]]
+
+Outputs:
+  Rol:
+    Description: Rol estandar del proyecto
+    Value: !GetAtt Role.Arn
+    Export:
+      Name: !Join ["-", [!Ref Environment, !Ref Project, "StandardRoleARN"]]

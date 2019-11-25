@@ -1,0 +1,160 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: "Build example of a proccess in aws\n"
+Parameters:
+  UUID:
+    Type: String
+  Project:
+    Type: String
+  Environment:
+    Type: String
+  DeployBucket:
+    Type: String
+  StackName:
+    Type: String
+  # SecurityGroupId1:
+  #   Type: String
+  # SubnetId1:
+  #   Type: String
+  # SubnetId2:
+  #   Type: String
+Globals:
+  Function:
+    Runtime: nodejs10.x
+    AutoPublishAlias:
+      Ref: Environment
+
+Resources:
+  DynamoGet:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: "app.handler"
+      Role: "arn:aws:iam::719042170775:role/predev-aws-training"
+      Code:
+        S3Bucket: !Ref DeployBucket
+        S3Key: "Functions/DynamoGet.zip"
+      Runtime: nodejs10.x
+      Timeout: "30"
+  DynamoPut:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: "app.handler"
+      Role: "arn:aws:iam::719042170775:role/predev-aws-training"
+      Code:
+        S3Bucket: !Ref DeployBucket
+        S3Key: "Functions/DynamoPut.zip"
+      Runtime: nodejs10.x
+      Timeout: "30"
+  StatesExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - !Sub states.${AWS::Region}.amazonaws.com
+            Action: "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: StatesExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "lambda:InvokeFunction"
+                Resource: "*"
+  DynamoStepExample:
+    Type: "AWS::StepFunctions::StateMachine"
+    Properties:
+      DefinitionString: !Sub
+        - |-
+          {
+            "Comment": "Example of stepfunction of Dynamo operations",
+            "StartAt": "InsertDynamoData",
+            "States": {
+              "InsertDynamoData": {
+                "Type": "Task",
+                "Resource": "${DynamoPutArn}",
+                "ResultPath": "$",
+                "Next": "GetDynamoData"
+                      },
+              "GetDynamoData": {
+                "Type": "Task",
+                "Resource": "${DynamoGetArn}",
+                "ResultPath": "$",
+                "Next": "Terminar"
+                        },
+              "Terminar": {
+                "Type": "Pass",
+                "End": true
+              }          
+            }
+          }
+        - {
+            DynamoPutArn: !GetAtt [DynamoPut, Arn],
+            DynamoGetArn: !GetAtt [DynamoGet, Arn],
+          }
+      RoleArn: !GetAtt [StatesExecutionRole, Arn]
+  # ServerlessRestApi:
+  #   Type: AWS::Serverless::Api
+  #   Properties:
+  #     StageName:
+  #       Ref: Environment
+  #     Variables:
+  #       Environment:
+  #         Ref: Environment
+  #     DefinitionBody:
+  #       Fn::Transform:
+  #         Name: AWS::Include
+  #         Parameters:
+  #           Location:
+  #             Fn::Sub: s3://${DeployBucket}/${Environment}-swagger-${UUID}.yaml
+  # BasePathMapping:
+  #   Type: AWS::ApiGateway::BasePathMapping
+  #   DependsOn: ServerlessRestApiStage
+  #   Properties:
+  #     BasePath: dynamo_api
+  #     DomainName:
+  #       Fn::ImportValue:
+  #         !Sub "${Environment}-ApiGatewayDomainName"
+  #     RestApiId: !Ref ServerlessRestApi
+  #     Stage: !Ref Environment
+  # DynamoGetApiFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Handler: app.handler
+  #     Runtime: nodejs10.x
+  #     Timeout: 30
+  #     CodeUri: 's3://${DeployBucket}/Functions/DynamoGet.zip'
+  #     Role:
+  #       Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/${Environment}-OpenApiRole"
+  #     VpcConfig:
+  #       SecurityGroupIds:
+  #         - Ref: SecurityGroupId1
+  #       SubnetIds:
+  #         - Ref: SubnetId1
+  #         - Ref: SubnetId2
+  #     Environment:
+  #       Variables:
+  #         ENV:
+  #           Ref: Environment
+  #         TABLA: ApiTable
+# StepFunctionParser:
+#     Type: Custom::AMIInfo
+#     Properties:
+#       ServiceToken: myLambdaArn
+#       DefinitionString:
+#         Fn::Transform:
+#           Name: AWS::Include
+#           Parameters:
+#             Location:
+#               Fn::Sub: 's3://${DeployBucket}/StepFunctions/StepFunctionX/definition.json'
+#   StepFunctionX:
+#     Type: "AWS::StepFunctions::StateMachine"
+#     Properties:
+#       StateMachineName: StepFunction1SampleNameX
+#       RoleArn: !GetAtt StepFunctionExecutionRole.Arn
+#       DefinitionString: !GetAtt StepFunctionParser.DefinitionString

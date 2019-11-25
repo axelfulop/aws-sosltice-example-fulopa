@@ -1,0 +1,23 @@
+{
+    "circuitId": "DYNAMO_EXAMPLE",
+    "circuitName": "DynamoExample",
+    "formId": "Dynamo-Example",
+    "payloadSchemas": {
+        "schema": {
+            "properties": {
+                "table_name": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            },
+            "required": [],
+            "title": "dynamoExample",
+            "type": "object"
+        }
+    },
+    "status": "active",
+    "stepFunctionARN": "",
+    "tenantId": "tenant1"
+}
