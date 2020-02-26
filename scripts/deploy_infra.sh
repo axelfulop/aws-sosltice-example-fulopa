@@ -11,9 +11,6 @@ BUCKET=aws-afulop-test
 STACK=$ENV-AFULOP-TEST
 PROJECT=AWS-TEST
 
-# SECURITY_GROUP_ID=sg-0ce1ad5c1792a828f
-# SUBNET_ID_1=subnet-758a5103
-# SUBNET_ID_2=subnet-758a5103
 
 if [ -f "$SOURCE/swagger.yaml" ]; then
     echo 'Uploading swagger to S3'
