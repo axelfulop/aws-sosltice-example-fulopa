@@ -14,7 +14,7 @@
         "coverage": "nyc report --statements 80 --functions 80 --lines 80 --branches 80 --check-coverage --reporter=text-summary --per-file"
     },
     "devDependencies": {
-        "aws-sdk": "^2.482.0",
+        "aws-sdk": "^2.814.0",
         "aws-sdk-mock": "^4.4.0",
         "axios-mock-adapter": "^1.17.0",
         "chai": "^4.2.0",
